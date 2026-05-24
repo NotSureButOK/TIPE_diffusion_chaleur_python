@@ -7,32 +7,15 @@ import matplotlib.animation as animation
 from matplotlib import colormaps
 
 
-#https://www.reddit.com/r/math/comments/mr95j9/solving_3d_heat_equation_in_python_to_cook_a/?tl=fr
-"""
-plt.close()
-cave_shape = (300, 500)   #(ordonnées,abscisses)
-cave_image = np.full(cave_shape, 0)
-N=50
-for i in range(N):
-    for j in range(cave_shape[1]):
-        cave_image[int(cave_shape[0]/3)-i+int(N/2),j]=300
-
-plt.title(f"Gris clair avec échelle forcée")
-print(cave_image)
-plt.imshow(cave_image, cmap='gray_r', vmin=0, vmax=1000)
-"""
 D = 2.5e-7
 a = (1.7/50)
 tau = 100
-epsilon = D * tau / (a**2)-0.02162629
-print(epsilon)
-# --- 1. INITIALISATION ---
-fig, ax = plt.subplots(figsize=(8, 4))  # Crée une figure et des axes
+epsilon = D * tau / (a**2)-0.02
+epsilon = 0.1
 
-# Dimensions de la cave
+fig, ax = plt.subplots(figsize=(8, 4))
 H, W = 300, 500
-
-cave_shape = (300, 500)  # (ordonnées,abscisses)
+cave_shape = (300, 500)
 cave_image = np.full(cave_shape, 0)
 N = 50
 for i in range(N):
@@ -40,50 +23,33 @@ for i in range(N):
         cave_image[int(cave_shape[0] / 3) - i + int(N / 2), j] = 400
 
 
-ax.imshow(cave_image, cmap='gray_r', vmin=0, vmax=1000, extent=(0, W, 0, H), zorder=1)  # zorder=1 pour le fond
+ax.imshow(cave_image, cmap='gray_r', vmin=0, vmax=1000, extent=(0, W, 0, H), zorder=1)
 
-# Initialisation de la carte de température
+
+
 cmap = colormaps['coolwarm']
-norm = plt.Normalize(vmin=-10, vmax=40)
-
-
-# zorder=2 pour superposer, alpha sera mis à jour.
+norm = plt.Normalize(vmin=273.15-10, vmax=273.15+40)
 im = ax.imshow(np.zeros((H, W)), cmap=cmap, norm=norm, extent=(0, W, 0, H), zorder=2, alpha=0.7)
-
-# Barres de couleur
-plt.colorbar(im, ax=ax, label='Température (°C)')
+plt.colorbar(im, ax=ax, label='Température (K)')
 
 ax.set_title("Simulation animée de la température dans la cave")
-ax.axis('off')  # Cache les axes
+ax.axis('off')
 theta = np.linspace(0, 11100, 1000)
+oui = np.full(cave_shape, 288.15)
 
-oui = np.full(cave_shape, 15)
-print(oui)
-#FONCTION DE MISE À JOUR (ANIMATION)
 def animate(frame):
-    oui[0:76] = 15 + 25*np.cos(4*np.pi*theta[frame]/11100)
-
+    oui[0:76] = 288.15 + 25*np.cos(4*np.pi*theta[frame]/11100)
     for d in range(0,499):
 
-        oui[75:125,d + 1] = oui[75:125,d] + epsilon * (oui[74:124,d] + oui[76:126,d] - 2 * oui[75:125,d]) #+ 1 * (oui[i,0:-2] - oui[i,1:-1]) + 2 * oui[i,1:-1]
-
-        #oui[i+1,0] = oui[i+1,1]
-        #oui[i+1,0] = oui[i+1,-1]
-
+        oui[76:124,d + 1] = oui[76:124,d] + epsilon * (oui[75:123,d] + oui[77:125,d] - 2 * oui[76:124,d])
     for j in range(125,300):
         oui[j] = oui[j-1]
-    new=np.array([oui[:,250]]*300)
+    new=np.array([oui[:,frame%500]]*300)
     fin=np.transpose(new)
     im.set_array(fin)
-
-    # Retourne l'objet mis à jour pour que Matplotlib puisse le redessiner
     return [im]
 
-
-
-# frames=100 pour simuler un cycle complet (de 0 à 99)
-# interval=100 signifie un délai de 100 ms entre chaque image
-ani = animation.FuncAnimation(fig, animate, frames=1000, interval=2, blit=True, repeat=True)
-
-# Pour afficher l'animation, vous devez utiliser plt.show()
+ani = animation.FuncAnimation(fig, animate, frames=1000, interval=2, blit=True, repeat=False)
 plt.show()
+#parler des pommes qui sont entreposées pendant de long mois dans des entrepôts frigorifiques et comment on pourrais potentiellemnt réduire l'impact
+#environnemental en utilisant
